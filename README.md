@@ -21,6 +21,7 @@ API Endpoints-
 
 1)
 endpoint - /imageCompress
+
 inputs - {"imageUrl": "URL of an image"}
 output - 
 {
@@ -30,6 +31,7 @@ output -
 
 2)
 endpoint - /listImagesCompress
+
 inputs - 
 {
 	"imageUrls":[
@@ -51,7 +53,9 @@ output -
 
 3)
 endpoint - /csvImagesCompress
+
 input is in the form of multipart/form-data
+
 input- csv file with urls of images in first column of seperate rows
 output- 
 {
@@ -65,8 +69,11 @@ output-
 
 4)
 endpoint - /imageDataCompress
+
 input is in the form of multipart/form-data
-input- imageg file
+
+input- image file
+
 output-
 {
   "success": true,
