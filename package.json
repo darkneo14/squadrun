@@ -1,0 +1,20 @@
+{
+  "name": "Squadrun",
+  "version": "1.0.0",
+  "description": "Squadrun Task Porject",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "connect-busboy": "0.0.2",
+    "express": "^4.15.2",
+    "express-json": "^1.0.0",
+    "fast-csv": "^2.4.0",
+    "gm": "^1.23.0",
+    "request": "^2.81.0"
+  },
+  "devDependencies": {
+    "morgan": "^1.8.1"
+  },
+  "author": "Darkneo",
+  "license": "ISC"
+}
