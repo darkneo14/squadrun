@@ -59,6 +59,7 @@ module.exports = {
 			return res.json({ success: false, message: 'Invalid Parameters' });
 		}
 		else{
+			//getting the name of the image
 			var i = uri.lastIndexOf("/");
 			var j = uri.lastIndexOf(".");
 			var link = "img/" + uri.substring(i+1,j) + ".jpg" ;
@@ -78,7 +79,6 @@ module.exports = {
 	listImagesCompress : function (req, res, next) {
 	
 		var uri = req.body.imageUrls;
-		// var fileName = req.body.fileName;
 		if(!uri){
 			return res.json({ success: false, message: 'Invalid Parameters' });
 		}
@@ -143,7 +143,7 @@ module.exports = {
   		
 		req.busboy.on('finish', function() {
     		console.log("in finish");
-    		if(flag)
+    		if(flag)		//if no file parameter was passed
     			return res.json({success: false, message: "Invalid Params!!"});
 		});
 	
@@ -158,6 +158,8 @@ module.exports = {
 	    //reading image
 	    req.busboy.on('file', function (fieldname, file, filename) {
 	        flag = 0;
+
+	        //resizing image
 	        resizingImage(file, filename, function(err){
 				if(err)
 					return res.json({success: false, message: "sorry Some error occured. Please try again!"});
@@ -168,7 +170,7 @@ module.exports = {
 
 		req.busboy.on('finish', function() {
     		console.log("in finish");
-    		if(flag)
+    		if(flag)		//if no file parameter was passed
     			return res.json({success: false, message: "Invalid Params!!"});
 		});
 	    

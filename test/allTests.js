@@ -5,7 +5,6 @@ var s = require("../server.js")
 // This agent refers to PORT where program is runninng.
 
 var server = supertest.agent("http://localhost:8081/api");
-var token='';
 
 describe("Sample unit Test", function(){
 
