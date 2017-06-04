@@ -58,14 +58,10 @@ input is in the form of multipart/form-data
 
 input- csv file with urls of images in first column of seperate rows
 
-	output- 
+output- 
 {
   "success": true,
-  "OutputUrls": [
-    "localhost:8081/img/8091f9dceb2ea55fa7b57bb7295e1824.jpg",
-    "localhost:8081/img/caea57268e1dee696f3c20a5a0f895f2.jpg",
-    "localhost:8081/img/Superman-S-Shield-space-phone-wallpaper-576x1024.jpg"
-  ]
+  "OutputUrl": "localhost:8081/data.csv"
 }
 
 4)
