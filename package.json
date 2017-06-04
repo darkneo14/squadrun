@@ -13,7 +13,14 @@
     "request": "^2.81.0"
   },
   "devDependencies": {
-    "morgan": "^1.8.1"
+    "morgan": "^1.8.1",
+    "istanbul": "^1.0.0-alpha",
+    "mocha": "=2.3.4",
+    "should": "^11.2.1",
+    "supertest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "istanbul cover _mocha -- -R spec"  
   },
   "author": "Darkneo",
   "license": "ISC"
