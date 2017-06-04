@@ -131,7 +131,7 @@ module.exports = {
 						}
 
 						csvStream.end();
-						return res.json({success: true, OutputUrls: "localhost:8081/"+filename});
+						return res.json({success: true, OutputUrl: "localhost:8081/"+filename});
 					}
 					else		// if resizing image failed
 						return res.json({success: false, message: "sorry Some error occured. Please try again!"});
@@ -159,7 +159,7 @@ module.exports = {
 	    req.busboy.on('file', function (fieldname, file, filename) {
 	        flag = 0;
 
-	        //resizing image
+	        //resizing images
 	        resizingImage(file, filename, function(err){
 				if(err)
 					return res.json({success: false, message: "sorry Some error occured. Please try again!"});
