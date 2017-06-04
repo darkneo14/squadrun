@@ -57,7 +57,8 @@ endpoint - /csvImagesCompress
 input is in the form of multipart/form-data
 
 input- csv file with urls of images in first column of seperate rows
-output- 
+
+	output- 
 {
   "success": true,
   "OutputUrls": [

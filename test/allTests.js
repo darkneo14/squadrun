@@ -83,5 +83,5 @@ describe("List Image Url", function(){
 	});
 
 
-})
+});
 
