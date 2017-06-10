@@ -10,6 +10,7 @@
     "express-json": "^1.0.0",
     "fast-csv": "^2.4.0",
     "gm": "^1.23.0",
+    "mongoose": "^4.10.5",
     "request": "^2.81.0"
   },
   "devDependencies": {
@@ -20,7 +21,7 @@
     "supertest": "^3.0.0"
   },
   "scripts": {
-    "test": "istanbul cover _mocha -- -R spec"  
+    "test": "istanbul cover _mocha -- -R spec"
   },
   "author": "Darkneo",
   "license": "ISC"

@@ -4,16 +4,20 @@ var gm = require('gm');
 var busboy = require('connect-busboy');	
 var csv = require('fast-csv');
 var fs = require('fs');
+var config = require('./config.js');
+var base58 = require('./base58.js');
+var Url = require('./models/url.js')
 
 // ******************** UTILITY Functions ***********************************
 
 //Compressing image passed as url in uri paramater
-var resizing = function(uri, link,callback){
+var resizing = function(uri, name, link,callback){
+	console.log(name);
 	gm(request(uri))
 			.minify()
 			.write(link, function (err) {
- 			 if (!err) callback(false,link);
- 			 else callback(true,link);
+ 			 if (!err) callback(false,link,name);
+ 			 else callback(true,link,name);
 		});
 };
 
@@ -21,18 +25,26 @@ var resizing = function(uri, link,callback){
 var resizingMultiple = function(uri, callback){
 	var output = [];
 	for(var i=0;i<uri.length;i++){
-			var x = uri[i].lastIndexOf("/");
-			var y = uri[i].lastIndexOf(".");
-			var link = "img/" + uri[i].substring(x+1,y) + ".jpg" ;
-			resizing(uri[i], link, function(err, out){
+			var x = uri[i].url.lastIndexOf("/");
+			var y = uri[i].url.lastIndexOf(".");
+			var name = uri[i].name;
+			console.log(name);
+			if(name == null)
+				name='';
+			var link = "img/" + uri[i].url.substring(x+1,y) + ".jpg" ;
+			resizing(uri[i].url, name, link, function(err, out, key){
 				if(err)
-					callback(false);
+					callback(false,uri);
 					// return res.json({ success: false, message: 'Invalid Parameters' });
 				else{
-					output.push("localhost:8081/"+out);
+					console.log(key);
+					shortenUrl(config.webhost+out, key,function(data){
+					output.push(data);
 					console.log(output.length);
 					if(output.length == uri.length)	
-						callback(output);					
+						callback(output,uri);
+					})
+										
 						
 				}
 			});
@@ -49,27 +61,97 @@ var resizingImage = function(file, filename, callback){
 		});
 };
 
+var shortenUrl = function(longUrl, key, callback){
+	// console.log(base58.encode(3));
+	console.log(key);
+	Url.findOne({long_url: longUrl}, function (err, doc){
+    if (doc){
+      // URL has already been shortened
+      shortUrl = config.webhost + base58.encode(doc._id);
+
+      // since the document exists, we return it without creating a new entry
+      callback(shortUrl);
+    } else {
+      // The long URL was not found in the long_url field in our urls
+      // collection, so we need to create a new entry
+      var newUrl; 
+
+      if(key!=''){
+      	console.log('in empty key');
+      	Url.findOne({key: key}, function (err, doc1){
+      	if(doc){
+      		callback("Already Exits");
+      	}
+      	else{
+      		shortUrl = config.webhost + key;
+      		newUrl = Url({
+        		long_url: longUrl,
+        		key: key
+     		});
+     		newUrl.save(function(err) {
+		    if (err){
+		        console.log(err);
+		    }
+
+		    // construct the short URL
+		    
+	        callback(shortUrl);
+	    	});
+      		
+      	}
+
+      })
+      }
+      else{
+      	newUrl = Url({
+        	long_url: longUrl
+     	});
+      		// save the new link
+	    newUrl.save(function(err) {
+		    if (err){
+		        console.log(err);
+		    }
+
+		    // construct the short URL
+		    shortUrl = config.webhost + base58.encode(newUrl._id);
+	        callback(shortUrl);
+	    });
+  		}
+  		if(err)
+  			console.log(err);	
+    }
+  });
+
+}
+
 //*********************** Request handlers ***********************************
 
 module.exports = {
 	imageCompress : function (req, res, next) {
 	
 		var uri = req.body.imageUrl;
+		var name = req.body.name;
+		if(name == null)
+			name='';
 		if(!uri){
 			return res.json({ success: false, message: 'Invalid Parameters' });
 		}
 		else{
 			//getting the name of the image
-			var i = uri.lastIndexOf("/");
-			var j = uri.lastIndexOf(".");
-			var link = "img/" + uri.substring(i+1,j) + ".jpg" ;
-
+			var a= new Date();
+			// console.log(Url.getSeq());
+			var link = "img/" + a + ".jpg" ;
+			console.log(link);
 			//compressing image utility called
-			resizing(uri, link, function(err,data){
+			resizing(uri,name, link, function(err,data,name){
 				if(err)
 					return res.json({ success: false, message: 'Invalid Parameters' });
-				else
-					return res.json({ success: true, OutputUrl: "localhost:8081/"+link });
+				else{
+					shortenUrl(config.webhost+link, name, function(data){
+						return res.json({ success: true, OutputUrl: data });
+					})
+					
+				}
 			});
 			
 		}
@@ -84,7 +166,7 @@ module.exports = {
 		}
 		else{
 			//compressing the images utility called
-			resizingMultiple(uri, function(data){
+			resizingMultiple(uri, function(data,uri){
 				if(data){
 					return res.json({success: true, OutputUrls: data});
 				}
@@ -105,14 +187,24 @@ module.exports = {
 	    //reading csv file
 	    req.busboy.on('file', function (fieldname, file, filename) {
 	        flag = 0;
+			var i = filename.lastIndexOf(".");
+			var link = filename.substring(i+1,filename.length) ;
+			console.log(link);
+			if(link == "csv"){
+				console.log("asad");
 	        var csvStream = csv()
 		    .on("data", function(data){
 		    	//reading data from csv and storing it in an array
-		        input.push(data[0]);
+		        var nm = '';
+		        if(data[1])
+		        	nm=data[1]
+
+		        var a={url:data[0], name: nm}
+		        input.push(a);
 		    })
 		    .on("end", function(){
 		    	//compressing the images utility called
-		         resizingMultiple(input, function(data){
+		         resizingMultiple(input, function(data,uri){
 					
 					if(data){		// if resizing the images was successful
 						var out =[];
@@ -126,12 +218,12 @@ module.exports = {
 						csvStream.pipe(writableStream);
 						// pushing data into file
 						for(var i=0;i<data.length;i++){
-							var a = [data[i]];
+							var a = [uri[i].url,data[i]];
 							csvStream.write(a);
 						}
 
 						csvStream.end();
-						return res.json({success: true, OutputUrl: "localhost:8081/"+filename});
+						return res.json({success: true, OutputUrl: config.webhost+filename});
 					}
 					else		// if resizing image failed
 						return res.json({success: false, message: "sorry Some error occured. Please try again!"});
@@ -139,6 +231,10 @@ module.exports = {
 		    });
 		 
 			file.pipe(csvStream);
+		}
+		else{
+			return res.json({success: false, message: "Invalid Params!!"});
+		}
 	    });
   		
 		req.busboy.on('finish', function() {
@@ -158,14 +254,23 @@ module.exports = {
 	    //reading image
 	    req.busboy.on('file', function (fieldname, file, filename) {
 	        flag = 0;
-
+	        var i = filename.lastIndexOf(".");
+			var link = filename.substring(i+1,filename.length);
+			if(link == "jpeg" || link == "jpg" || link == "png"){
 	        //resizing images
 	        resizingImage(file, filename, function(err){
 				if(err)
 					return res.json({success: false, message: "sorry Some error occured. Please try again!"});
-				else
-					return res.json({success: true, OutputUrl: "localhost:8081/img/"+filename });
+				else{
+					shortenUrl(config.webhost+filename, '', function(data){
+						return res.json({ success: true, OutputUrl: data });
+					})
+				}
 			})
+	    }
+	    else{
+	    	return res.json({success: false, message: "Invalid Params!!"});
+	    }
 		});
 
 		req.busboy.on('finish', function() {

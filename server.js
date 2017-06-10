@@ -4,6 +4,10 @@ var util = require('util');
 var morgan = require('morgan');
 var busboy = require('connect-busboy');	
 var Utility = require('./Utility.js')
+var mongoose = require('mongoose');
+var config = require('./config');
+var base58 = require('./base58.js');
+var Url = require('./models/url');
 var app = express();
 
 
@@ -19,7 +23,13 @@ app.use(busboy());
 // For Logging
 app.use(morgan('dev'));
 
-
+mongoose.connect(config.db.url,function(err){
+    if(err)
+        console.log(err);
+    else {
+        console.log('database connected');
+    }
+});
 //Api Routes
 
 apiRoutes.get('/', function(req, res) {
@@ -41,10 +51,27 @@ apiRoutes.post('/csvImagesCompress', Utility.csvImagesCompress)
 apiRoutes.post('/imageDataCompress', Utility.imageDataCompress)
 
 
+app.get('/:encoded_id', function(req, res){
+  var base58Id = req.params.encoded_id;
+  var id = base58.decode(base58Id);
+
+  // check if url already exists in database
+  Url.findOne({$or: [ { _id: id } , { key: base58Id } ]}, function (err, doc){
+    if (doc) {
+      // found an entry in the DB, redirect the user to their destination
+      res.redirect(doc.long_url);
+    } else {
+      // nothing found, take 'em home
+      res.redirect(config.webhost);
+    }
+  });
+
+});
+
 
 app.use('/api', apiRoutes);
 app.use(express.static('./'));
-var server = app.listen(8081, function () {
+var server = app.listen(config.port, function () {
    var host = server.address().address
    var port = server.address().port
    
